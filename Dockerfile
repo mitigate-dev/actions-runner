@@ -12,6 +12,7 @@ USER root
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential \
+      git-lfs \
       pkg-config \
       libyaml-dev \
       libssl-dev \
