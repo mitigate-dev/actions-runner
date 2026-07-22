@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libffi-dev \
       libgmp-dev \
       libpq-dev \
+      postgresql-client \
       libxml2-dev \
       libxslt1-dev \
       libvips \
