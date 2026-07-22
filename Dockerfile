@@ -2,9 +2,10 @@
 #
 # Based on the official ARC runner (so it stays compatible with the
 # gha-runner-scale-set chart / run.sh) plus a build toolchain, common headers so
-# native gem extensions (bigdecimal, psych, pg, nokogiri, ...) compile, and the
-# shared libraries headless Chrome needs (setup-chrome, system tests) — so
-# workflows don't have to apt-get any of it at job time.
+# native gem extensions (bigdecimal, psych, pg, nokogiri, ...) compile, the
+# shared libraries headless Chrome needs (setup-chrome, system tests), and node
+# + corepack-managed yarn/pnpm — so workflows don't have to bootstrap any of it
+# at job time.
 FROM ghcr.io/actions/actions-runner:latest
 
 USER root
@@ -50,6 +51,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libu2f-udev \
       libvulkan1 \
       xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node (bootstrap) + corepack-managed yarn/pnpm, so setup-node's built-in cache
+# works on the first call and workflows match GitHub-hosted behavior. setup-node
+# still installs each repo's pinned version (.nvmrc) on top.
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && corepack enable \
     && rm -rf /var/lib/apt/lists/*
 
 USER runner
