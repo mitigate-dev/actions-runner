@@ -3,12 +3,19 @@
 # Based on the official ARC runner (so it stays compatible with the
 # gha-runner-scale-set chart / run.sh) plus a build toolchain, common headers so
 # native gem extensions (bigdecimal, psych, pg, nokogiri, ...) compile, the
-# shared libraries headless Chrome needs (setup-chrome, system tests), and node
-# + corepack-managed yarn/pnpm — so workflows don't have to bootstrap any of it
-# at job time.
+# shared libraries and fonts headless Chrome needs (setup-chrome, system tests),
+# and node + corepack-managed yarn/pnpm — so workflows don't have to bootstrap
+# any of it at job time.
 FROM ghcr.io/actions/actions-runner:latest
 
 USER root
+
+# Canonical's mirrors (archive/security.ubuntu.com) are blackholed from the
+# office network these runners live on — TCP connects but no data flows, so
+# apt-get stalls at job time. Point apt at the regional Latvian mirror
+# (koyanet.lv), which serves both the main and security pockets at full speed.
+RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://lv.archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|http://lv.archive.ubuntu.com/ubuntu|g' \
+      /etc/apt/sources.list.d/ubuntu.sources
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential \
@@ -25,6 +32,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxslt1-dev \
       libvips \
       fonts-liberation \
+      fonts-dejavu-core \
+      fonts-noto-core \
+      fonts-noto-color-emoji \
       libasound2t64 \
       libatk-bridge2.0-0t64 \
       libatk1.0-0t64 \
