@@ -20,6 +20,7 @@ RUN sed -i 's|http://archive.ubuntu.com/ubuntu|http://lv.archive.ubuntu.com/ubun
 RUN apt-get update && apt-get install -y --no-install-recommends \
       build-essential \
       git-lfs \
+      zstd \
       pkg-config \
       libyaml-dev \
       libssl-dev \
@@ -72,5 +73,25 @@ RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && corepack enable \
     && rm -rf /var/lib/apt/lists/*
+
+# Let ACTIONS_RESULTS_URL be set from the environment, so the runners can be
+# pointed at our own GitHub Actions cache server (see ci.mitigate.dev/runner.yml)
+# instead of GitHub's cloud cache. The worker hardcodes the variable name and
+# overwrites whatever we set, so we rename the constant in the binary
+# (ACTIONS_RESULTS_URL -> ACTIONS_RESULTS_ORL, same length) and it stops looking.
+# This is the patch documented at
+# https://gha-cache-server.falcondev.io/getting-started#binary-patch
+#
+# Safe against runner self-update, which would restore the stock binary: ARC's
+# scale-set controller always registers runners with --disableupdate. Keeping the
+# image current is on us (GitHub stops queueing jobs to runners ~30 days behind).
+#
+# The grep is not optional: if an upstream runner build ever changes that string
+# the sed silently matches nothing, and caching would quietly stop working with
+# no error anywhere. Fail the build instead. (strings comes from binutils, pulled
+# in by build-essential above; -el reads 16-bit little-endian strings.)
+RUN sed -i 's/\x41\x00\x43\x00\x54\x00\x49\x00\x4F\x00\x4E\x00\x53\x00\x5F\x00\x52\x00\x45\x00\x53\x00\x55\x00\x4C\x00\x54\x00\x53\x00\x5F\x00\x55\x00\x52\x00\x4C\x00/\x41\x00\x43\x00\x54\x00\x49\x00\x4F\x00\x4E\x00\x53\x00\x5F\x00\x52\x00\x45\x00\x53\x00\x55\x00\x4C\x00\x54\x00\x53\x00\x5F\x00\x4F\x00\x52\x00\x4C\x00/g' \
+      /home/runner/bin/Runner.Worker.dll \
+    && strings -el /home/runner/bin/Runner.Worker.dll | grep -q ACTIONS_RESULTS_ORL
 
 USER runner
