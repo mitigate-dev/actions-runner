@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       poppler-utils \
       p7zip-full \
       gh \
-      awscli \
+      unzip \
       tmux \
       python3-venv \
       python3-pip \
@@ -78,6 +78,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libu2f-udev \
       libvulkan1 \
       xdg-utils
+
+# AWS CLI v2 via AWS's official installer: the `awscli` apt package isn't in
+# noble's repos (it only reappears in resolute/26.04), so install straight
+# from AWS instead of pinning a pre-release Ubuntu pocket.
+RUN curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip \
+    && unzip -q /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install \
+    && rm -rf /tmp/awscliv2.zip /tmp/aws
 
 # Node (bootstrap) + corepack-managed yarn/pnpm, so setup-node's built-in cache
 # works on the first call and workflows match GitHub-hosted behavior. setup-node
