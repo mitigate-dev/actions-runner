@@ -34,6 +34,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libvips \
       imagemagick \
       libmagickwand-dev \
+      mupdf-tools \
+      poppler-utils \
+      p7zip-full \
+      gh \
+      awscli \
+      tmux \
+      python3-venv \
+      python3-pip \
       fonts-liberation \
       fonts-dejavu-core \
       fonts-noto-core \
@@ -53,6 +61,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libnspr4 \
       libnss3 \
       libpango-1.0-0 \
+      libpangoft2-1.0-0 \
+      libharfbuzz0b \
+      libharfbuzz-subset0 \
+      libnss3-tools \
       libx11-6 \
       libxcb1 \
       libxcomposite1 \
@@ -65,16 +77,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxtst6 \
       libu2f-udev \
       libvulkan1 \
-      xdg-utils \
-    && rm -rf /var/lib/apt/lists/*
+      xdg-utils
 
 # Node (bootstrap) + corepack-managed yarn/pnpm, so setup-node's built-in cache
 # works on the first call and workflows match GitHub-hosted behavior. setup-node
 # still installs each repo's pinned version (.nvmrc) on top.
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
-    && corepack enable \
-    && rm -rf /var/lib/apt/lists/*
+    && corepack enable
 
 # Let ACTIONS_RESULTS_URL be set from the environment, so the runners can be
 # pointed at our own GitHub Actions cache server (see ci.mitigate.dev/runner.yml)
